@@ -2,6 +2,7 @@
   <tr>
     <td width="65%" valign="top">
       <h4>Sokoban AI Solver & IDE</h4>
+      <p><b>🚀 Live Interaction Available:</b> <a href="https://puzzlegamesbyvk.github.io/Sokoban-AI-SOLVER-IDE-Level-Editor/">Play in Browser</a></p>
       <p>
         A specialized Sokoban AI Solver powered by a Breadth-First Search (BFS) engine. 
         Designed as an interactive IDE, this tool allows users to stress-test logic 
