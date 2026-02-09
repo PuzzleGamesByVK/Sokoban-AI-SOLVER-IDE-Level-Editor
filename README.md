@@ -1,16 +1,25 @@
-![Sokoban AI IDE Preview](SOKOBAN_SOLVER_GIT1.jpg)
-<p align="center">
-  <img src="SOKOBAN_SOLVER_GIT1.jpg)" width="600" title="Sokoban AI Solver Preview">
-</p>
-# Sokoban-AI-SOLVER-IDE-Level-Editor
-A Sokoban AI Solver &amp; IDE using BFS logic. Features a random level generator and a JSON-based configuration tool for custom puzzle design. Includes 4 Solver Modes: from fast linear paths to deep permutation searches (N!*N!) designed to untangle complex box clusters. Perfect for stress-testing AI logic.
-
-
-A specialized Sokoban AI solver powered by a Breadth-First Search (BFS) engine. While the system can generate random layouts, it is designed as an interactive IDE where users can create custom puzzles to stress-test the solver's logic.
-
-Users can interact directly with the grid or edit the JSON configuration for precision. The AI features four distinct solverModes to balance speed and complexity. For highly tangled box clusters, Modes 2, 3, and 4 utilize permutation logic (Target Carousel, Box Order Carousel, and Deep Search) to find solutions that standard linear solvers might miss.
-
-
-How to Use1. Level DesignRandom Gen: Use the "RANDOM GEN" mode and click "SYNC & GENERATE" to create a new board.Manual Edit: Switch to "TOGGLE WALLS" or "TOGGLE BOX/TGT" to draw directly on the grid. The JSON in the config area updates in real-time.JSON Import: You can paste a saved configuration directly into the text area and click "SYNC & GENERATE" to load it.2. Selecting a Solver ModeEdit the "solverMode" value in the configuration text area before clicking "ANALYZE & SOLVE":Mode 1 (Linear): Solves boxes in their default order to assigned targets. Fastest, but easily blocked.Mode 2 (Target Carousel): Keeps box order fixed but tries every permutation of target assignments ($N!$).Mode 3 (Box Carousel): Keeps target assignments fixed but tries every possible order of moving the boxes ($N!$).Mode 4 (Deep Search): The most powerful mode. Tries every combination of box orders AND target assignments ($N! \times N!$). Use this for "tangled" clusters.3. ExecutionClick ANALYZE & SOLVE.Watch the Log below the grid to see the AI's "thought process" as it tests different permutations.If a solution is found, the Animation will trigger automatically at the speed defined by animSpeed.
-
-And some words from me PuzzleGamesByVK VK: Vasilis Kroupas from Greece! Almost everything is a gemini creation with a small part provided by copilot. I (as a human) had a couple of ideas that have been implemented inside the HTML. And i was trying to copy paste parts of code that have been produced on previous versions and missed on newer versions! Speaking of newer version... I hope to find time, motivation or colaborations through the community of github to provide a new better version!
+<table border="0">
+  <tr>
+    <td width="75%" valign="top">
+      <h1>Sokoban AI Solver & IDE</h1>
+      <p>
+        A specialized Sokoban AI Solver powered by a Breadth-First Search (BFS) engine. 
+        Designed as an interactive IDE, this tool allows users to stress-test logic 
+        with custom puzzles or random layouts.
+      </p>
+      <p>
+        <b>Mobile-Friendly Design:</b> The interface is optimized for various screen sizes, 
+        ensuring that the grid and solver controls remain accessible and responsive 
+        on mobile devices.
+      </p>
+      <p>
+        Features 4 Solver Modes, from linear paths to deep $N! \times N!$ 
+        permutation searches to untangle the most complex box clusters.
+      </p>
+    </td>
+    <td width="25%" valign="top">
+      <img src="SOKOBAN_SOLVER_GIT1.jpg" alt="Mobile Preview" style="max-width: 100%; height: auto; border-radius: 8px;">
+      <p align="center"><sub><i>Responsive IDE Preview</i></sub></p>
+    </td>
+  </tr>
+</table>
