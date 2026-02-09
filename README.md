@@ -2,7 +2,7 @@
   <tr>
     <td width="65%" valign="top">
       <h4>Sokoban AI Solver & IDE</h4>
-      <p><b>🚀 Live Interaction Available:</b> <a href="https://puzzlegamesbyvk.github.io/Sokoban-AI-SOLVER-IDE-Level-Editor/">Play in Browser</a></p>
+      <b>🚀 Live Interaction Available:</b> <a href="https://puzzlegamesbyvk.github.io/Sokoban-AI-SOLVER-IDE-Level-Editor/" target="_blank" rel="noopener noreferrer">Open in a new Tab/a>
       <p>
         A specialized Sokoban AI Solver powered by a Breadth-First Search (BFS) engine. 
         Designed as an interactive IDE, this tool allows users to stress-test logic 
@@ -18,7 +18,7 @@ How to Use: Level DesignRandom Gen: Use the RANDOM GEN (DEFAULT) mode and click 
       </p>
     </td>
     <td width="35%" valign="top">
-      <img src="SOKOBAN_SOLVER_GIT1.jpg" alt="Mobile Preview" style="max-width: 100%; height: auto; border-radius: 8px;">
+      <img src="sokoScreenshot.jpg" alt="Mobile Preview" style="max-width: 100%; height: auto; border-radius: 8px;">
       <p align="center"><sub><i>Responsive IDE Preview</i></sub></p>
     </td>
   </tr>
