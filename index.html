@@ -4,19 +4,103 @@
 <head>
     <title>Sokoban AI SOLVER: IDE & Level Editor</title>
     <style>
-        body { background-color: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
-        .panel { width: 600px; background: #161b22; padding: 15px; border-radius: 8px 8px 0 0; border: 1px solid #30363d; display: flex; flex-direction: column; gap: 10px; }
-        .panel-title { text-align: center; font-size: 14px; font-weight: bold; color: #58a6ff; text-transform: uppercase; letter-spacing: 1px; padding-bottom: 5px; }
-        .editor-zone { display: flex; gap: 10px; height: 160px; }
-        textarea { flex: 3; background: #010409; color: #7ee787; border: 1px solid #30363d; font-family: 'Consolas', monospace; font-size: 11px; padding: 10px; box-sizing: border-box; resize: none; }
-        .sidebar { flex: 1; display: flex; flex-direction: column; gap: 5px; background: #0d1117; padding: 5px; border: 1px solid #30363d; border-radius: 4px; }
-        .sidebar-title { font-size: 9px; color: #8b949e; text-transform: uppercase; font-weight: bold; padding: 2px; }
-        .menu-opt { font-size: 10px; padding: 6px; background: #21262d; border: 1px solid #30363d; cursor: pointer; border-radius: 3px; text-align: center; transition: 0.2s; }
+        body { 
+            background-color: #0d1117; 
+            color: #c9d1d9; 
+            font-family: 'Segoe UI', sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 10px; /* Reduced padding for mobile edges */
+            margin: 0; 
+        }
+		.panel { 
+            width: 450px; 
+            background: #161b22; 
+            padding: 12px; 
+            border-radius: 8px 8px 0 0; 
+            border: 1px solid #30363d; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            box-sizing: border-box; /* Ensures padding doesn't push width past 450px */
+        }
+        .panel-title { 
+            text-align: center; 
+            font-size: 15px; /* Slightly smaller for narrow layout */
+            font-weight: bold; 
+            color: #58a6ff; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            padding-bottom: 2px; 
+        }
+        .editor-zone { 
+            display: flex; 
+            gap: 8px; 
+            height: 180px; /* Increased height slightly for better visibility in narrow view */
+        }
+        textarea { 
+            flex: 2; /* Adjusted ratio for 450px width */
+            background: #010409; 
+            color: #7ee787; 
+            border: 1px solid #30363d; 
+            font-family: 'Consolas', monospace; 
+            font-size: 12px; /* Smaller?*/
+            padding: 8px; 
+            box-sizing: border-box; 
+            resize: none; 
+        }
+        .sidebar { 
+            flex: 1.2; /* Giving sidebar slightly more room for button text */
+            display: flex; 
+            flex-direction: column; 
+            gap: 4px; 
+            background: #0d1117; 
+            padding: 4px; 
+            border: 1px solid #30363d; 
+            border-radius: 4px; 
+        }
+        .sidebar-title { 
+            font-size: 12px; 
+            color: #8b949e; 
+            text-transform: uppercase; 
+            font-weight: bold; 
+            padding: 2px; 
+            text-align: center;
+        }
+        .menu-opt { 
+            font-size: 12px; 
+            padding: 5px; 
+            background: #21262d; 
+            border: 1px solid #30363d; 
+            cursor: pointer; 
+            border-radius: 3px; 
+            text-align: center; 
+            transition: 0.2s; 
+        }
         .menu-opt.active { background: #1f6feb; border-color: #58a6ff; color: white; }
-        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        button { padding: 12px; cursor: pointer; border: none; font-weight: bold; border-radius: 4px; font-size: 11px; background: #21262d; color: #c9d1d9; border: 1px solid #30363d; }
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr;     gap: 7px; }
+        button { 
+            padding: 10px 5px; 
+            cursor: pointer; 
+            border: none; 
+            font-weight: bold; 
+            border-radius: 4px; 
+            font-size: 14px; 
+            background: #21262d; 
+            color: #c9d1d9; 
+            border: 1px solid #30363d; 
+        }
         button:hover { background: #30363d; border-color: #58a6ff; }
-        .grid { display: grid; grid-template-columns: repeat(15, 30px); grid-template-rows: repeat(15, 30px); border: 5px solid #30363d; background-color: #010409; margin-top: -1px; }
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(15, 30px); 
+            grid-template-rows: repeat(15, 30px); 
+            border: 1px solid #30363d; /* Reduced border thickness to align better */
+            background-color: #010409; 
+            margin-top: -1px; 
+            box-sizing: content-box;
+        }
         .cell { width: 30px; height: 30px; border: 1px solid rgba(255,255,255,0.02); display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: crosshair; }
         .cell:hover { background-color: rgba(88, 166, 255, 0.1); }
         .wall { background-color: #21262d !important; border: 1px solid #484f58 !important; }
@@ -25,7 +109,21 @@
         .box { background-color: #d29922; border-radius: 4px; z-index: 5; border: 1px solid #000; }
         .box-on-target { background-color: #8957e5; border-radius: 4px; z-index: 5; border: 2px solid #fff; }
         .active-box { outline: 3px solid #58a6ff; outline-offset: -3px; }
-        #log { width: 600px; height: 160px; background: #010409; color: #7ee787; font-family: 'Consolas', monospace; padding: 12px; font-size: 11px; border: 1px solid #30363d; border-top: none; overflow-y: auto; border-radius: 0 0 8px 8px; line-height: 1.5; }
+        #log { 
+            width: 450px; 
+            height: 140px; 
+            background: #010409; 
+            color: #7ee787; 
+            font-family: 'Consolas', monospace; 
+            padding: 10px; 
+            font-size: 11px; 
+            border: 1px solid #30363d; 
+            border-top: none; 
+            overflow-y: auto; 
+            border-radius: 0 0 8px 8px; 
+            line-height: 1.4; 
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body>
@@ -39,6 +137,7 @@
   "solverMode": 1,
   "animSpeed": 320,
   "maxSegments": 10,
+  "maxPermutIterations": 576,
   "aBoxes": [],
   "aTargets": [],
   "aWalls": [],
@@ -246,7 +345,7 @@ function handleCellClick(idx) {
     for (let op of orderPerms) {
         for (let tp of targetPerms) {
             comboCount++;
-            
+
             // Detailed Logging
             log(`<span style="color: #8b949e">Combo ${comboCount}/${totalCombos}: Order [${op}] | Targets [${tp}]</span>`);
 
@@ -254,6 +353,8 @@ function handleCellClick(idx) {
             let player = {...layout.player};
             let anims = [];
             let ok = true;
+
+            if (comboCount>cfg.maxPermutIterations){ok = false;    log(`&nbsp; <small style="color: #f85149">Reached maxPermutIterations: ${cfg.maxPermutIterations}. The system has stopped for safety reasons.</small>`);    return;  }
 
             // Execute the Timeline (Order of boxes)
             for (let i = 0; i < boxes.length; i++) {
