@@ -124,6 +124,8 @@
             line-height: 1.4; 
             box-sizing: border-box;
         }
+	.player.relocating { 		box-shadow: 0 0 15px #58a6ff;    animation: pulse-blue 1s infinite;	}
+	@keyframes pulse-blue {    0% { transform: scale(1); }    50% { transform: scale(1.1); }    100% { transform: scale(1); }	}
     </style>
 </head>
 <body>
@@ -135,9 +137,9 @@
   "nWalls": 24,
   "msg": "THE FOLLOWING LINES ARE CONSIDERED Advanced settings, SO PLEASE DO NOT EDIT THEM, UNLESS YOU KNOW WHAT YOU ARE DOING",
   "solverMode": 1,
-  "animSpeed": 320,
+  "animSpeed": 340,
   "maxSegments": 10,
-  "maxPermutIterations": 576,
+  "maxPermIterations": 576,
   "aBoxes": [],
   "aTargets": [],
   "aWalls": [],
@@ -168,9 +170,11 @@
     let boxIndices = [];
     let targetIndices = [];
     let currentMode = 0; // 0:Random, 1:Load, 2:Walls, 3:Entities
+	let isRelocatingPlayer = false; // Track if we are in "move player" mode
+	let idxOLD = -1
 
-    const getIdx = (r, c) => r * SIZE + c;
-    const getCoords = (idx) => ({ r: Math.floor(idx / SIZE), c: idx % SIZE });
+    const getIdx = (r, c) => r * SIZE + c;//MAYBE AT OLDER VERSIONS
+    const getCoords = (idx) => ({ r: Math.floor(idx / SIZE), c: idx % SIZE });//MAYBE AT OLDER VERSIONS
 
     function setMode(m) {
         currentMode = m;
@@ -181,11 +185,11 @@
     function initGame() {
         const configArea = document.getElementById('config');
         let cfg = JSON.parse(configArea.value);
-        const grid = document.getElementById('game-grid');
+		const grid = document.getElementById('game-grid');
         grid.innerHTML = ''; wallIndices.clear();
 
         // Build Grid with Click Listeners
-        for(let i=0; i<225; i++) {
+        for(let i=0; i<225; i++) {//ONLY FOR 15x15 . IF 16x16 AND MORE CHANGE ...
             const d = document.createElement('div'); 
             d.id = `idx${i}`; d.className = 'cell';
             d.onclick = () => handleCellClick(i);
@@ -202,7 +206,7 @@
 			const leftC = Array.from({length: SIZE}, (_, r) => r * SIZE); 
 			const rightC = leftC.map(i => i + (SIZE - 1)); 
 			const borderC = [...new Set([...topC, ...bottomC, ...leftC, ...rightC])];
-			const edgeExclusions = new Uint8Array([...borderC]);
+			const edgeExclusions = new Uint8Array([...borderC]);//ONLY FOR 15x15. IF 16x16 AND MORE CHANGE TO Int16Array
             //const edgeExclusions = new Uint8Array([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,29,30,44,45,59,60,74,75,89,90,104,105,119,120,134,135,149,150,164,165,179,180,194,195,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224]);
             
 			while(boxIndices.length < cfg.nBoxes) {
@@ -224,15 +228,17 @@
         }
 
         // Apply Config to Layout
-        layout.player = getCoords(cfg.iPlayer);
-        layout.boxes = boxIndices.sort((a,b)=>a-b).map(getCoords);
-        layout.targets = targetIndices.sort((a,b)=>a-b).map(getCoords);
-        cfg.aWalls.forEach(idx => wallIndices.add(idx));
+        //layout.player = getCoords(cfg.iPlayer);
+	layout.player = cfg.iPlayer; 
+    boxIndices.sort((a,b)=>a-b);
+    targetIndices.sort((a,b)=>a-b);
+    cfg.aWalls.forEach(idx => wallIndices.add(idx));
 
         syncConfig();
         drawBoard();
-        renderEntities(layout.player, layout.boxes, -1);
-        log("Map Ready.");
+        //renderEntities(layout.player, layout.boxes, -1);
+		renderEntities(layout.player, boxIndices, -1);
+        log("---<br>> Map Ready.");
     }
 
 
@@ -244,22 +250,62 @@
         return (up && left) || (up && right) || (down && left) || (down && right);
     }
 
+/* function isCornered(idx) {
+    const r = Math.floor(idx / SIZE);
+    const c = idx % SIZE;
+    const up = wallIndices.has(idx - SIZE) || r === 0;
+    const down = wallIndices.has(idx + SIZE) || r === SIZE - 1;
+    const left = wallIndices.has(idx - 1) || c === 0;
+    const right = wallIndices.has(idx + 1) || c === SIZE - 1;
+    return (up && left) || (up && right) || (down && left) || (down && right);
+}*/
+
 function handleCellClick(idx) {
-    const cfg = JSON.parse(document.getElementById('config').value);
+const cfg = JSON.parse(document.getElementById('config').value);
+    // IF PLAYER IS CLICKED: Start relocation mode
+    if (idx === layout.player && [2,3].includes(currentMode)) {
+        isRelocatingPlayer = true;
+        document.getElementById(`idx${idx}`).classList.add('relocating');
+		idxOLD=idx;
+        log("Select an empty cell to reposition the player...");
+        
+        // Auto-cancel after 5 seconds
+        setTimeout(() => {
+            if (isRelocatingPlayer) {
+                isRelocatingPlayer = false;
+                document.getElementById(`idx${idx}`).classList.remove('relocating');
+                log("Repositioning timed out.");
+            }
+        }, 5000);
+        return;
+    }
+
+    // IF RELOCATION IS ACTIVE: Move player to empty cell
+    if (isRelocatingPlayer && [2,3].includes(currentMode)) {
+        if (wallIndices.has(idx) || boxIndices.includes(idx)) {
+            log("Cannot move player onto a wall or box!");
+            return;
+        }
+        layout.player = idx;
+		document.getElementById(`idx${idxOLD}`).innerHTML='';
+        isRelocatingPlayer = false;
+        log(`Player moved to index ${idx}`);
+        syncConfig();
+        drawBoard();
+        renderEntities(layout.player, boxIndices, -1);
+        return;
+    }
     
+// STANDARD MODE LOGIC
     if (currentMode === 2) { 
-        // Mode 2: Toggle Walls
-        // Remove from other entity lists if making it a wall
         boxIndices = boxIndices.filter(i => i !== idx);
         targetIndices = targetIndices.filter(i => i !== idx);
-        
         wallIndices.has(idx) ? wallIndices.delete(idx) : wallIndices.add(idx);
-        
-    } else if (currentMode === 3) { 
+   } else if (currentMode === 3) { 
         // Mode 3: Toggle BOX -> TARGET -> BLANK
         // Remove wall if placing an entity
         wallIndices.delete(idx);
-
+		//
         if (boxIndices.includes(idx)) {
             // If it was a box, move it to target
             boxIndices = boxIndices.filter(i => i !== idx);
@@ -274,132 +320,116 @@ function handleCellClick(idx) {
             // If it was blank, make it a box
             boxIndices.push(idx);
         }
-        
-        // Update the coordinates for the solver
-        layout.boxes = boxIndices.map(getCoords);
-        layout.targets = targetIndices.map(getCoords);
     }
 
     syncConfig();
     drawBoard();
-    renderEntities(layout.player, layout.boxes, -1);
+    //renderEntities(layout.player, layout.boxes, -1);
+	renderEntities(layout.player, boxIndices, -1);
 }
 
-    function syncConfig() {
-        const area = document.getElementById('config');
-        let cfg = JSON.parse(area.value);
-        cfg.aBoxes = boxIndices.sort((a,b)=>a-b);
-        cfg.aTargets = targetIndices.sort((a,b)=>a-b);
-        cfg.aWalls = Array.from(wallIndices).sort((a,b)=>a-b);
-        cfg.nBoxes = boxIndices.length;
-        cfg.dateCreated = new Date().toLocaleString();
-        area.value = JSON.stringify(cfg, null, 2);
-    }
+function syncConfig() {
+    const area = document.getElementById('config');
+    let cfg = JSON.parse(area.value);
+    cfg.aBoxes = boxIndices.sort((a,b)=>a-b);
+    cfg.aTargets = targetIndices.sort((a,b)=>a-b);
+    cfg.aWalls = Array.from(wallIndices).sort((a,b)=>a-b);
+    cfg.iPlayer = layout.player; // Keep config in sync with moved player
+    cfg.nBoxes = boxIndices.length;
+    cfg.dateCreated = new Date().toLocaleString();
+    area.value = JSON.stringify(cfg, null, 2);
+}
 
-    // ... [Previous Solver functions: isCornered, findPath, findMacroPath, solve, generatePermutations, executeAnimation remain the same] ...
-
-    async function solve() {
-	    const cfg = JSON.parse(document.getElementById('config').value);
-	        // Initial Corner Check (Walls only)
-        for (let i = 0; i < layout.boxes.length; i++) {
-            let b = layout.boxes[i];
-            if (isCornered(b.r, b.c)) {
-                if (!layout.targets.some(t => t.r === b.r && t.c === b.c)) {
-                    log(`<span style='color:#f85149'>Abort: Box ${i} is cornered by walls.</span>`);
-                    return;
-                }
-            }
-        }
-	const mode = cfg.solverMode || 1; 
+ async function solve() {
+    const configArea = document.getElementById('config');
+    const cfg = JSON.parse(configArea.value);
+    const mode = cfg.solverMode || 1;
     
     log(`<b>Starting Solver [Mode: ${mode}] [Seg Limit: ${cfg.maxSegments}]</b>`);
     
-    // Preparation
-    const boxIdxs = layout.boxes.map((_, i) => i);
-    const targetIdxs = layout.targets.map((_, i) => i);
-
-    let orderPerms, targetPerms;
-
-    // --- STRATEGY SELECTION ---
-    if (mode === 1) {
-        // Mode 1: Basic (Box 0 -> Target 0, etc.)
-        orderPerms = [boxIdxs]; 
-        targetPerms = [targetIdxs];
-    } else if (mode === 2) {
-        // Mode 2: Target Carousel (Fixed Order, All Target Combos)
-        orderPerms = [boxIdxs];
-        targetPerms = generatePermutations(targetIdxs);
-    } else if (mode === 3) {
-        // Mode 3: Box Carousel (Fixed Targets, All Order Combos)
-        orderPerms = generatePermutations(boxIdxs);
-        targetPerms = [targetIdxs];
-    } else {
-        // Mode 4: Deep Search (The "Nuclear" Option)
-        orderPerms = generatePermutations(boxIdxs);
-        targetPerms = generatePermutations(targetIdxs);
+    // 1. Initial Deadlock Check (Using Index Math)
+    for (let bIdx of boxIndices) {
+        const r = Math.floor(bIdx / SIZE);
+        const c = bIdx % SIZE;
+        if (isCornered(r, c) && !targetIndices.includes(bIdx)) {
+            log(`<span style='color:#f85149'>Abort: Box at ${bIdx} is cornered.</span>`);
+            return;
+        }
     }
+
+    // 2. Prepare Permutations
+    const boxRefIdxs = boxIndices.map((_, i) => i);
+    const targetRefIdxs = targetIndices.map((_, i) => i);
+    let orderPerms = (mode === 3 || mode === 4) ? generatePermutations(boxRefIdxs) : [boxRefIdxs];
+    let targetPerms = (mode === 2 || mode === 4) ? generatePermutations(targetRefIdxs) : [targetRefIdxs];
 
     const totalCombos = orderPerms.length * targetPerms.length;
     let comboCount = 0;
 
+    // 3. Main Search Loop
     for (let op of orderPerms) {
         for (let tp of targetPerms) {
             comboCount++;
+            
+            if (comboCount > cfg.maxPermIterations) {
+                log(`<span style="color: #f85149">Safety Stop: Reached ${cfg.maxPermIterations}: maximum allowed Permutation iterations.</span>`);
+                return;
+            }
 
-            // Detailed Logging
-            log(`<span style="color: #8b949e">Combo ${comboCount}/${totalCombos}: Order [${op}] | Targets [${tp}]</span>`);
+            log(`<span style="color: #8b949e">Combo ${comboCount}/${totalCombos}: Order [${op}] | Targets [${tp}]</span>`); // Detailed Logging
 
-            let boxes = layout.boxes.map(b => ({...b}));
-            let player = {...layout.player};
-            let anims = [];
-            let ok = true;
+            // Current state for this permutation
+            let currentBoxes = [...boxIndices];
+            let currentPlayer = cfg.iPlayer;
+            let totalAnims = [];
+            let success = true;
 
-            if (comboCount>cfg.maxPermutIterations){ok = false;    log(`&nbsp; <small style="color: #f85149">Reached maxPermutIterations: ${cfg.maxPermutIterations}. The system has stopped for safety reasons.</small>`);    return;  }
+            // Try to move each box in the chosen order to its assigned target
+            for (let i = 0; i < currentBoxes.length; i++) {
+                let boxToMoveIdx = op[i]; 
+                let targetForThisBox = targetIndices[tp[boxToMoveIdx]];
 
-            // Execute the Timeline (Order of boxes)
-            for (let i = 0; i < boxes.length; i++) {
-                let currBoxIdx = op[i]; 
-                let assignedTargetIdx = tp[currBoxIdx];
-                
-                let m = findMacroPath(
-                    boxes[currBoxIdx], 
-                    layout.targets[assignedTargetIdx], 
-                    boxes, 
-                    player, 
-                    currBoxIdx, 
+                let resultSegments = findMacroPath(
+                    currentBoxes[boxToMoveIdx],
+                    targetForThisBox,
+                    currentBoxes,
+                    currentPlayer,
+                    boxToMoveIdx,
                     cfg.maxSegments
                 );
 
-                if (m) {
-                    log(`&nbsp; <small style="color: #58a6ff">Step ${i+1}: Box ${currBoxIdx} → Target ${assignedTargetIdx} OK</small>`);
-                    
-                    m.forEach(seg => {
-                        if (seg.reach) seg.reach.forEach(pos => { 
-                            player = {...pos}; 
-                            anims.push({p:{...pos}, b:boxes.map(bx=>({...bx})), active:currBoxIdx}); 
-                        });
-                        seg.segPath.forEach(bPos => { 
-                            player = {...boxes[currBoxIdx]}; 
-                            boxes[currBoxIdx] = {...bPos}; 
-                            anims.push({p:{...player}, b:boxes.map(bx=>({...bx})), active:currBoxIdx}); 
+                if (resultSegments) {
+                    // Update the state for the next box in the sequence
+                    resultSegments.forEach(seg => {
+                        // Add player movement (reach)
+                        if (seg.reach) {
+                            seg.reach.forEach(stepIdx => {
+                                currentPlayer = stepIdx;
+                                totalAnims.push({ p: currentPlayer, b: [...currentBoxes], active: boxToMoveIdx });
+                            });
+                        }
+                        // Add box push
+                        seg.segPath.forEach(stepIdx => {
+                            currentPlayer = currentBoxes[boxToMoveIdx]; // Player moves to where box was
+                            currentBoxes[boxToMoveIdx] = stepIdx;
+                            totalAnims.push({ p: currentPlayer, b: [...currentBoxes], active: boxToMoveIdx });
                         });
                     });
-                } else { 
-                    ok = false; 
-                    log(`&nbsp; <small style="color: #f85149">Failed: Box ${currBoxIdx} blocked at Step ${i+1}</small>`);
-                    break; 
+                } else {
+                    success = false;
+                    break;
                 }
             }
 
-            if (ok) { 
-                log(`<b><span style="color: #3fb950">SOLVED! found at Combo ${comboCount}</span></b>`); 
-                log(`<i>Final Timeline: ${op.join(' → ')}</i>`);
-                executeAnimation(anims, cfg.animSpeed); 
-                return; 
+            if (success) {
+                log(`<b><span style="color: #3fb950">SOLVED! found at Combo ${comboCount}</span></b>`);
+				log(`<i>Final Timeline: ${op.join(' → ')}</i>`);
+                executeAnimation(totalAnims, cfg.animSpeed);
+                return;
             }
         }
     }
-    log("<span style='color:#f85149'><b>Search Exhausted:</b> No sequence works in Mode " + mode + "</span>");
+    log("<span style='color:#f85149'><b>Search Exhausted:</b> No solution found in Mode " + mode + "</span>");
 }
 
     function generatePermutations(arr) {
@@ -408,56 +438,139 @@ function handleCellClick(idx) {
         p(arr); return res;
     }
 
-    function findPath(start, goal, boxesAtThatMoment) {
-        if(start.r === goal.r && start.c === goal.c) return [];
-        let obstacles = new Set(wallIndices);
-        boxesAtThatMoment.forEach(b => obstacles.add(getIdx(b.r, b.c)));
-        if (obstacles.has(getIdx(goal.r, goal.c))) return null;
-        let open = [{r: start.r, c: start.c, path: []}], visited = new Set([getIdx(start.r, start.c)]);
-        while(open.length > 0) {
-            let curr = open.shift();
-            if(curr.r === goal.r && curr.c === goal.c) return curr.path;
-            for(let [dr,dc] of [[0,1],[0,-1],[1,0],[-1,0]]) {
-                let nr=curr.r+dr, nc=curr.c+dc, nIdx=getIdx(nr,nc);
-                if(nr>=0 && nr<SIZE && nc>=0 && nc<SIZE && !obstacles.has(nIdx) && !visited.has(nIdx)) {
-                    visited.add(nIdx);
-                    open.push({r: nr, c: nc, path: [...curr.path, {r:nr, c:nc}]});
-                }
+function findPath(startIdx, goalIdx, boxesAtThatMoment) {
+    if (startIdx === goalIdx) return [];
+    
+    const totalCells = SIZE * SIZE;
+    const parent = new Int16Array(totalCells).fill(-1);
+    
+    // FIXED: boxesAtThatMoment is now an array of indices, not objects
+    let obstacles = new Set(wallIndices);
+    boxesAtThatMoment.forEach(bIdx => obstacles.add(bIdx)); 
+    
+    if (obstacles.has(goalIdx)) return null;
+
+    const LURD = [-1, -SIZE, 1, SIZE];
+    let queue = [startIdx];
+    parent[startIdx] = startIdx; 
+
+    let head = 0; 
+    
+    while (head < queue.length) {
+        let currIdx = queue[head++];
+
+        if (currIdx === goalIdx) {
+            let path = [];
+            let step = goalIdx;
+            while (step !== startIdx) {
+                path.push(step);
+                step = parent[step];
+            }
+            return path.reverse(); 
+        }
+
+        for (let offset of LURD) {
+            let nIdx = currIdx + offset;
+
+            // Boundary & Wrap-around Check
+            if (nIdx < 0 || nIdx >= totalCells) continue;
+            if (Math.abs(offset) === 1 && Math.floor(nIdx / SIZE) !== Math.floor(currIdx / SIZE)) continue;
+
+            // Check if visited or obstacle
+            if (parent[nIdx] === -1 && !obstacles.has(nIdx)) {
+                parent[nIdx] = currIdx; 
+                queue.push(nIdx);
             }
         }
-        return null;
     }
+    return null;
+}
 
-    function findMacroPath(startBox, goalTarget, allBoxes, startPlayer, movingIdx, maxSeg) {
-        let queue = [{ boxPos: {...startBox}, playerPos: {...startPlayer}, boxesState: allBoxes.map(b => ({...b})), segments: [] }];
-        let visited = new Set();
-        while(queue.length > 0) {
-            let curr = queue.shift();
-            let key = `${getIdx(curr.boxPos.r, curr.boxPos.c)}|${getIdx(curr.playerPos.r, curr.playerPos.c)}`;
-            if(visited.has(key)) continue; visited.add(key);
-            if(curr.boxPos.r === goalTarget.r && curr.boxPos.c === goalTarget.c) return curr.segments;
-            if(curr.segments.length >= maxSeg) continue;
-            for(let [dr, dc] of [[0,1], [0,-1], [1,0], [-1,0]]) {
-                let pushSide = { r: curr.boxPos.r - dr, c: curr.boxPos.c - dc };
-                let reach = findPath(curr.playerPos, pushSide, curr.boxesState);
-                if(!reach && getIdx(curr.playerPos.r, curr.playerPos.c) !== getIdx(pushSide.r, pushSide.c)) continue;
-                for(let dist = 1; dist < SIZE; dist++) {
-                    let nR = curr.boxPos.r + dr * dist, nC = curr.boxPos.c + dc * dist;
-                    if(nR < 0 || nR >= SIZE || nC < 0 || nC >= SIZE) break;
-                    if(wallIndices.has(getIdx(nR, nC)) || curr.boxesState.some((b, k) => k !== movingIdx && b.r === nR && b.c === nC)) break;
-                    let newBoxPos = { r: nR, c: nC }, newPlayerPos = { r: nR - dr, c: nC - dc };
-                    let nBoxes = curr.boxesState.map((b, k) => k === movingIdx ? newBoxPos : b);
-                    let sPath = []; for(let i=1; i<=dist; i++) sPath.push({r: curr.boxPos.r + dr*i, c: curr.boxPos.c + dc*i});
-                    queue.push({ boxPos: newBoxPos, playerPos: newPlayerPos, boxesState: nBoxes, segments: [...curr.segments, { reach, segPath: sPath }] });
-                }
+function findMacroPath(startBoxIdx, goalTargetIdx, allBoxesIdx, startPlayerIdx, movingIdx, maxSeg) {
+    // 1. Initialize State Tracking
+    // We use a large Int8Array to track visited [BoxPos][PlayerPos] states.
+    // Max index is 224, so 225 * 225 = 50,625 possible states.                   NOTE: THIS FUNCTION IS ONLY FOR 15x15! IN CASE OF 16x16 OR MORE WE WOULD NEED DIFFERENT APROACH.
+    const visitedStates = new Int8Array(50625); 
+
+    // Queue stores objects, but now using simple integers for positions
+    let queue = [{ 
+        boxIdx: startBoxIdx, 
+        playerIdx: startPlayerIdx, 
+        boxesState: [...allBoxesIdx], 
+        segments: [] 
+    }];
+
+    let head = 0;
+    const LURD = [-1, -SIZE, 1, SIZE];
+
+    while (head < queue.length) {
+        let curr = queue[head++];
+
+        // 2. Mathematical Key for visited check: (Box * 225) + Player
+        // This is more memory efficient than 100,000*x+y and fits perfectly.
+        let stateKey = (curr.boxIdx * 225) + curr.playerIdx;
+        if (visitedStates[stateKey] === 1) continue;
+        visitedStates[stateKey] = 1;
+
+        // 3. Goal Check
+        if (curr.boxIdx === goalTargetIdx) return curr.segments;
+        if (curr.segments.length >= maxSeg) continue;
+
+        // 4. Try pushing in 4 directions
+        for (let offset of LURD) {
+            let pushSideIdx = curr.boxIdx - offset;
+
+            // Boundary check for pushSide
+            if (pushSideIdx < 0 || pushSideIdx >= 225) continue;
+            if (Math.abs(offset) === 1 && Math.floor(pushSideIdx/SIZE) !== Math.floor(curr.boxIdx/SIZE)) continue;
+
+            // Can player reach the pushing side?
+            let reach = findPath(curr.playerIdx, pushSideIdx, curr.boxesState);
+            
+            // If reach is null, check if player is already standing there
+            if (!reach && curr.playerIdx !== pushSideIdx) continue;
+
+            // 5. Try pushing the box forward as many cells as possible (Macro Move)
+            for (let dist = 1; dist < SIZE; dist++) {
+                let nBoxIdx = curr.boxIdx + (offset * dist);
+                
+                // Boundary and Obstacle Check
+                if (nBoxIdx < 0 || nBoxIdx >= 225) break;
+                if (Math.abs(offset) === 1 && Math.floor(nBoxIdx/SIZE) !== Math.floor(curr.boxIdx/SIZE)) break;
+                if (wallIndices.has(nBoxIdx) || curr.boxesState.some((bIdx, k) => k !== movingIdx && bIdx === nBoxIdx)) break;
+
+                // New State calculation
+                let newBoxIdx = nBoxIdx;
+                let newPlayerIdx = nBoxIdx - offset; // Player ends up behind the box
+                let nBoxesState = curr.boxesState.map((bIdx, k) => k === movingIdx ? newBoxIdx : bIdx);
+                
+                // Construct Segment Path for animation
+                let sPath = [];
+                for (let i = 1; i <= dist; i++) sPath.push(curr.boxIdx + offset * i);
+
+                queue.push({
+                    boxIdx: newBoxIdx,
+                    playerIdx: newPlayerIdx,
+                    boxesState: nBoxesState,
+                    segments: [...curr.segments, { reach, segPath: sPath }]
+                });
             }
         }
-        return null;
     }
+    return null;
+}
 
-    async function executeAnimation(q, spd) {
-        for(let f of q) { renderEntities(f.p, f.b, f.active); await new Promise(r => setTimeout(r, 450 - spd)); }
+async function executeAnimation(queue, speed) {
+    // The higher the speed value in config, the lower the delay
+    const delay = Math.max(10, 500 - speed); 
+    for (let frame of queue) {
+        // frame.p and frame.b are now single integers and flat arrays
+        renderEntities(frame.p, frame.b, frame.active);
+        // Wait for the next frame
+        await new Promise(resolve => setTimeout(resolve, delay));
     }
+    log("<span style='color: #3fb950'>Animation Complete.</span>");
+}
 
     function drawBoard() {
         for(let i=0; i<225; i++) {
@@ -466,19 +579,35 @@ function handleCellClick(idx) {
         }
     }
 
-    function renderEntities(p, boxes, activeIdx) {
-        document.querySelectorAll('.player, .box, .box-on-target, .active-box').forEach(e => { e.classList.remove('player','box','box-on-target','active-box'); e.innerText=''; });
-        boxes.forEach((b, idx) => {
-            let idxVal = getIdx(b.r, b.c);
-            let el = document.getElementById(`idx${idxVal}`);
-            if(!el) return;
-            el.classList.add(targetIndices.includes(idxVal) ? 'box-on-target' : 'box');
-            if(idx === activeIdx) el.classList.add('active-box');
-            el.innerText = '📦';
-        });
-        let pEl = document.getElementById(`idx${getIdx(p.r,p.c)}`);
-        if(pEl) { pEl.classList.add('player'); pEl.innerText = '👤'; }
+function renderEntities(pIdx, boxesIdxs, activeBoxIdx) {
+    // 1. Efficiently clear only the dynamic classes and emojis
+    document.querySelectorAll('.player, .box, .box-on-target, .active-box').forEach(e => { 
+        e.classList.remove('player', 'box', 'box-on-target', 'active-box'); 
+        e.innerText = ''; 
+    });
+
+    // 2. Render Boxes using the index array
+    boxesIdxs.forEach((bIdx, idx) => {
+        const el = document.getElementById(`idx${bIdx}`);
+        if (!el) return;
+
+        // Check if the box is on a target index for styling
+        const isOnTarget = targetIndices.includes(bIdx);
+        el.classList.add(isOnTarget ? 'box-on-target' : 'box');
+        
+        // If this is the box currently being pushed by the AI
+        if (idx === activeBoxIdx) el.classList.add('active-box');
+        
+        el.innerText = '📦';
+    });
+
+    // 3. Render Player at their index
+    const pEl = document.getElementById(`idx${pIdx}`);
+    if (pEl) { 
+        pEl.classList.add('player'); 
+        pEl.innerText = '👤'; 
     }
+}
 
     function log(m) { const l=document.getElementById('log'); l.innerHTML += `> ${m}<br>`; l.scrollTop = l.scrollHeight; }
     initGame();
