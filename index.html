@@ -135,7 +135,7 @@
             <textarea id="config">{
   "nBoxes": 4,
   "nWalls": 24,
-  "msg": "THE FOLLOWING LINES ARE CONSIDERED Advanced settings, SO PLEASE DO NOT EDIT THEM, UNLESS YOU KNOW WHAT YOU ARE DOING",
+  "msg": "The Following Lines Are Considered ADVANCED SETTINGS, So Please Do Not Edit Them, Unless You Know What You Are Doing!",
   "solverMode": 5,
   "animSpeed": 340,
   "maxSegments": 10,
@@ -359,32 +359,28 @@ async function solve() {
     // --- NEW SBDT PAIRING: Detailed Debug Version ---
 		const sbdtPairing = (boxes, targets) => {
         log("<i>SBDT: Running Density-Based Pairing...</i>");
-
+            const LURD = [-1, -SIZE, 1, SIZE];
+            const Diag = [-SIZE-1, -SIZE+1, SIZE-1, SIZE+1];
+			
         // 1. Calculate Box Points (Lowest = Best/Freest)
         let boxData = boxes.map((bIdx, originalArrayIdx) => {
             let ptsb = 1;
-            const LURD = [-1, -SIZE, 1, SIZE];
-            const Diag = [-SIZE-1, -SIZE+1, SIZE-1, SIZE+1];
-
             LURD.forEach(off => {
                 let n = bIdx + off;
                 if (wallIndices.has(n)) ptsb += 4;//2->4
-                else if (boxes.includes(n)) ptsb += 1;
+                else if (boxes.includes(n)) ptsb += 2;//1->2
             });
             Diag.forEach(off => {
                 let n = bIdx + off;
-                if (wallIndices.has(n)) ptsb += 2;
+                if (wallIndices.has(n)) ptsb += 1;//2->1
                 else if (boxes.includes(n)) ptsb += 1;
             });
             return { bIdx, originalArrayIdx, ptsb };
         });
 
         // 2. Calculate Target Points (Highest = Best/Deepest)
-        let targetData = targets.map((tIdx, originalArrayIdx) => {
+        let targetData = targets.map((tIdx, originalArrayIdx) => {    //targetIndices ?
             let pts = 1;
-            const LURD = [-1, -SIZE, 1, SIZE];
-            const Diag = [-SIZE-1, -SIZE+1, SIZE-1, SIZE+1];
-
             LURD.forEach(off => {
                 let n = tIdx + off;
                 let isOut = (n < 0 || n >= 225 || (Math.abs(off) === 1 && Math.floor(n/SIZE) !== Math.floor(tIdx/SIZE)));
@@ -409,8 +405,9 @@ async function solve() {
         boxData.sort((a, b) => a.ptsb - b.ptsb);       // Lowest points first
         targetData.sort((a, b) => b.pts - a.pts);    // Highest points first
 
-		
-
+		//log(`<span style="color:#58a6ff">Sorted Boxes ARRAY(Low Pts): [${boxData.map(d => d.bIdx)}]</span>`);
+		//log(`<span style="color:#58a6ff">Sorted Targets ARRAY(High Pts): [${targetData.map(d => d.tIdx)}]</span>`);
+		log(`<span style="color:#58a6ff">boxes:${JSON.stringify(boxIndices)} targets:${JSON.stringify(targetIndices)}</span>`);
 		// CRITICAL FIX: The pairing must map the original box index to the target index
 		let pairing = new Array(boxes.length);
 		boxData.forEach((box, i) => {
@@ -421,23 +418,24 @@ async function solve() {
         const sortedBoxIndices = boxData.map(d => d.originalArrayIdx);
         const sortedTargetIndices = targetData.map(d => d.tIdx);
 		
-        log(`<span style="color:#7ee787">Sorted Boxes OBJECT(Low Pts): [${JSON.stringify(boxData)}]</span>`);
-        log(`<span style="color:#7ee787">Sorted Boxes ARRAY(Low Pts): [${sortedBoxIndices.join(',')}]</span>`);
-        log(`<span style="color:#7ee787">Sorted Targets ARRAY(High Pts): [${sortedTargetIndices.join(',')}]</span>`);
+        
+		//log(`<span style="color:#58a6ff">pairing: [${JSON.stringify(targetData)}]</span>`);
+		//log(`<span style="color:#7ee787">Sorted Boxes ARRAY(Low Pts): [${sortedBoxIndices.join(',')}]</span>`);
+        //log(`<span style="color:#7ee787">Sorted Targets ARRAY(High Pts): [${sortedTargetIndices.join(',')}]</span>`);
 
         // Pairing: Box[0] with Target[0]
         let resultPairing = new Array(boxes.length);
         boxData.forEach((box, i) => {
             resultPairing[box.originalArrayIdx] = targetData[i].originalArrayIdx;
         });
-
-        log(`<span style="color:#58a6ff">SBDT Density Match: [${resultPairing.join(',')}]</span>`);
+		//log(`<span style="color:#7ee787">pairing: [${JSON.stringify(pairing)}]</span>`);
+        //log(`<span style="color:#58a6ff">SBDT Density Match: [${resultPairing.join(',')}]</span>`);
 		
 		
 			// Define sortedBoxIndices: the order of original array positions to move
 			return {
 			pairing: pairing, 
-			sortedBoxIndices: boxData.map(d => d.originalArrayIdx) 
+			sortedBoxIndices: boxData.map(d => d.originalArrayIdx)
 			};
 		};
 
@@ -503,12 +501,12 @@ async function solve() {
 		// 1. TRY SBDT FIRST
 		if(sbdt==true){
 			// 1. Get the raw point data
-            const pairingData = sbdtPairing(bIdxs, targetIndices); 
+            const pairingData = sbdtPairing(bIdxs, targetRefIdxs); //targetIndices
             // 2. Extract the boxes in the order they should be moved (Low Points First)
             // We use the boxData sorting from your SBDT function
             const smartBoxOrder = pairingData.sortedBoxIndices; 
             const smartTargetOrder = pairingData.pairing;
-			log(`<i>SBDT Attempting Box Sequence: [${smartBoxOrder.join(',')}]</i>`);
+			log(`<i>SBDT Box to Target Sequence: b:[${smartBoxOrder.join(',')}]  t:[${smartTargetOrder.join(',')}]</i>`);
 			
             //let smartResult = runSequence(bIdxs, pIdx, smartBoxOrder, smartTargetOrder);
             //if (smartResult) {
