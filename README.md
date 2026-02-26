@@ -1,7 +1,10 @@
 <table border="0">
   <tr>
     <td width="65%" valign="top">
-      <h4>Sokoban AI Solver & IDE</h4>
+      <h4>
+        Sokoban AI Solver & IDE 
+        <img src="https://github.com/PuzzleGamesByVK/Sokoban-AI-SOLVER-IDE-Level-Editor/actions/workflows/main.yml/badge.svg" alt="Status Badge" style="vertical-align: middle; margin-left: 10px;">
+      </h4>
       <p><b>🚀</b> <a href="https://puzzlegamesbyvk.github.io/Sokoban-AI-SOLVER-IDE-Level-Editor/">Live Interaction Available</a></p>
       <p>
         A specialized Sokoban AI Solver powered by a custom Breadth-First Search (BFS) engine. 
@@ -29,7 +32,7 @@
         <li><b>Deep dynPDB (Dynamic Pattern Database):</b> The project’s most advanced feature. When direct paths are blocked, the <code>tryDeepSolve</code> function triggers a dynamic analysis to find multi-step "parking" maneuvers and sub-goals.</li>
       </ul>
       <p>
-        <b>Execution:</b> Click <b>ANALYZE & SOLVE</b>. The real-time Log tracks the AI's thought process as it evaluates permutations and heuristics. Due to the complexity of N! permutations, a default 15-second <code>TIME_LIMIT</code> is implemented to ensure performance.
+        <b>Execution:</b> Click <b>ANALYZE & SOLVE</b>. The real-time Log tracks the AI's thought process as it evaluates permutations and heuristics. Due to the complexity of N! permutations, a default 15-second <code>TIME_LIMIT</code> is implemented to ensure performance. If a solution is found within the editable TIME_LIMIT, the Animation will trigger automatically at the speed defined by animSpeed.
       </p>
       <p><i>This project was developed in collaboration with Google Gemini.</i></p>
     </td>
