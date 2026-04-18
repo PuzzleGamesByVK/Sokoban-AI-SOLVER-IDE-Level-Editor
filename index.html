@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sokoban AI SOLVER: IDE & Level Editor</title>
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+    <link rel="stylesheet" href="src/style.css" />
+</head>
+
+<body>
+
+    <div class="panel">
+        <div class="panel-title">Sokoban AI: Level Editor IDE</div>
+        <div class="editor-zone">
+            <textarea id="config">{
+  "nBoxes": 4,
+  "nWalls": 24,
+  "msg": "The Following Lines Are Considered ADVANCED SETTINGS, So Please Do Not Edit Them, Unless You Know What You Are Doing!",
+  "animSpeed": 340,
+  "maxSegments": 10,
+  "timeLimit": 15,
+  "aBoxes": [],
+  "aTargets": [],
+  "aWalls": [],
+  "iPlayer": 0,
+  "title": "randomX",
+  "creator": "ArtInt",
+  "randomNumID": 9999999,
+  "dateCreated": ""
+}</textarea>
+            <div class="sidebar">
+                <div class="sidebar-title">Mode Selection</div>
+                <div class="menu-opt active" onclick="setMode(0)">RANDOM GEN</div>
+                <div class="menu-opt" onclick="setMode(1)">LOAD / SAVE</div>
+                <div class="menu-opt" onclick="setMode(2)">TOGGLE WALLS</div>
+                <div class="menu-opt" onclick="setMode(3)">TOGGLE BOX/TGT</div>
+            </div>
+        </div>
+        <div class="btn-group">
+            <button onclick="initGame()" style="color: #3fb950;">1. SYNC & GENERATE</button>
+            <button onclick="solve()" style="color: #58a6ff;">2. ANALYZE & SOLVE</button>
+        </div>
+    </div>
+    <div id="game-grid" class="grid"></div>
+    <div id="log"></div>
+	
+<div id="LoadSaveModal1" class="modal-black">
+<div class="modal-content">
+<span class="close-modal">&times;&nbsp;</span><br>
+<span id="LoadSaveText">Here are system default layouts and the structure to save localy and retrieve layouts created by users. There are plans to expand this feature by fetching sokoban stages from the internet! 
+Feel free to explore what this modal window can provide, or close it and copy paste a layout that you might have saved as a text in json form before!</span><br>
+ <div id="StageArea1System" >div1 with buttons</div>
+ <br>
+ <div id="StageArea2LocalStorage" ></div>
+ <button onclick="saveLocaly(1)" style="color: #edbd24; width:220px;">Save Current Layout Localy</button>
+ <br><br>
+ <button onclick="this.innerHTML='not ready yet'" style="color: #008081;">Show More Options</button>
+</div>
+</div>
+
+<div id="LoadSaveModal2" class="modal-black">
+<div class="modal-content">
+<span class="close-modal">&times;&nbsp;</span><br>
+<span>Please write <b>Title</b>, name of <b>Creator</b> and perhaps a different from the default msg before you save this Layout. A random Mumeric ID will also be assigned...</span><br>
+  <label for="stg_title">Stage Title:</label>  <input type="text" id="stg_title" size="14" /><br>
+  <label for="stg_creator">Layout Creator:</label>  <input type="text" id="stg_creator" size="14" /><br>
+  <label for="stg_msg">msg:</label>  <input type="text" id="stg_msg" size="29" /><br>
+  <button onclick="saveLocaly(2)" style="color: #edbd24; width:220px;">Save Current Layout Localy</button>
+</div>
+</div>
+
+<div id="LoadSaveModal3" class="modal-black">
+<div class="modal-content">
+<span class="close-modal">&times;&nbsp;</span><br>
+<span id="LSpreviewJSON" style="display: inline-block; width: 250px; height: 270px; overflow-y: scroll; overflow-x: hidden;  white-space: pre-wrap; word-wrap: break-word;">
+    LSpreviewJSON
+</span>
+<hr>
+<button onclick='LoadSaveMode("a3")' style="color: green;"><u>SYNC & LOAD</u></button><br>
+<button onclick="this.innerHTML='not ready yet'">Upload on the web</button><br>
+<button onclick='LoadSaveMode("DeleteLocaly")' style="color: #fc795d;">Delete Localy</button><br>
+</div>
+</div>
+
+    <!-- Scripts -->
+    <script src="src/script.js"></script>
+</body>
+</html>
