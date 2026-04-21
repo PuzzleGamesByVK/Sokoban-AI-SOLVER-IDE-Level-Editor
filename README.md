@@ -34,7 +34,7 @@
       <p>
         <b>Execution:</b> Click <b>ANALYZE & SOLVE</b>. The real-time Log tracks the AI's thought process as it evaluates permutations and heuristics. Due to the complexity of N! permutations, a default 15-second <code>TIME_LIMIT</code> is implemented to ensure performance. If a solution is found within the editable TIME_LIMIT, the Animation will trigger automatically at the speed defined by animSpeed.
       </p>
-      <p><i>This project was developed in collaboration with Google Gemini.</i></p>
+      <p><i>This project was developed in collaboration with Google Gemini.</i> Future versions may contain links to layouts on the web. Feel free to propose improvements!</p>
     </td>
     <td width="35%" valign="top">
       <img src="sokoScreenshot.jpg" alt="Mobile Preview" style="max-width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;">
