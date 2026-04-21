@@ -2,7 +2,7 @@
   <tr>
     <td width="65%" valign="top">
       <h4>
-        Sokoban AI Solver & IDE &nbsp;&nbsp;&nbsp;
+        Sokoban AI Solver & IDE    &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
         <img src="https://github.com/PuzzleGamesByVK/Sokoban-AI-SOLVER-IDE-Level-Editor/actions/workflows/main.yml/badge.svg" alt="Status Badge" style="vertical-align: middle; margin-left: 10px;">
       </h4>
       <p><b>🚀</b> <a href="https://puzzlegamesbyvk.github.io/Sokoban-AI-SOLVER-IDE-Level-Editor/">Live Interaction Available</a></p>
